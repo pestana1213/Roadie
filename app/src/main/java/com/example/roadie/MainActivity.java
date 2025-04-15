@@ -3,9 +3,12 @@ package com.example.roadie;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.service.notification.NotificationListenerService;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -98,5 +101,11 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Bluetooth permission is required for this feature.", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    private boolean isNotificationListenerEnabled() {
+        // Check if your notification listener service is enabled
+        String enabledListeners = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
+        return enabledListeners != null && enabledListeners.contains(NotificationListenerService.class.getName());
     }
 }

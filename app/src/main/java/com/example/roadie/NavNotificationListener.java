@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.util.Log;
 
 public class NavNotificationListener extends NotificationListenerService {
 
@@ -13,9 +14,9 @@ public class NavNotificationListener extends NotificationListenerService {
 
         if (packageName.equals("com.google.android.apps.maps")) {
             Bundle extras = sbn.getNotification().extras;
-            String title = extras.getString("android.title");
             String text = extras.getCharSequence(Notification.EXTRA_TEXT, "").toString();
-
+            Log.d("NavNotificationListener", "Received notification: " + text);
+            BluetoothHelper.sendData(text);
         }
     }
 
