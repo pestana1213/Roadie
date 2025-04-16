@@ -112,7 +112,9 @@ public class MainActivity extends AppCompatActivity {
             boolean connected = BluetoothHelper.connectToBluetooth(selectedDevice, this);
             if (connected) {
                 Toast.makeText(this, "Connected to " + selectedDevice.getName(), Toast.LENGTH_SHORT).show();
-                deviceListView.setVisibility(View.GONE); // Oculta a lista
+                String dataToSend = "Welcome to Rodie!";
+                BluetoothHelper.sendData(dataToSend);
+                deviceListView.setVisibility(View.GONE);
             } else {
                 Toast.makeText(this, "Failed to connect", Toast.LENGTH_SHORT).show();
             }
