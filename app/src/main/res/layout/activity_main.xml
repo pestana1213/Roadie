@@ -4,33 +4,73 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:background="#FAFAFA">
+    android:padding="16dp"
+    android:background="#FFF1F1"
+    android:fitsSystemWindows="true"> <!-- Add this line to ensure the content adjusts to the status bar -->
 
+    <!-- Top Bar with App Name (No Margins, fits below the status bar) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="#000396">
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rodie"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <!-- Title Text -->
     <TextView
-        android:id="@+id/tv_title"
+        android:id="@+id/tv_devices"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Dispositivos Bluetooth"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="16dp"
         android:gravity="center"
-        android:layout_marginBottom="16dp" />
+        android:text="Dispositivos Bluetooth"
+        android:textColor="#333333"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
+    <!-- Connect Button -->
     <Button
         android:id="@+id/btn_connect"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#000396"
         android:text="Conectar ao ESP32"
-        android:backgroundTint="#009688"
         android:textColor="#FFFFFF"
-        android:layout_marginBottom="24dp" />
+        android:textSize="16sp"
+        android:layout_gravity="center" />
 
+    <!-- Grant Access Button -->
+    <Button
+        android:id="@+id/btn_grant_access"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#FF6347"
+        android:text="Grant Notification Access"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:layout_gravity="center" />
+
+    <!-- Device List View -->
     <ListView
         android:id="@+id/deviceListView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:divider="@android:color/darker_gray"
-        android:dividerHeight="1dp"/>
+        android:dividerHeight="1dp"
+        android:padding="8dp" />
 </LinearLayout>

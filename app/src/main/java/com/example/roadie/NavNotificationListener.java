@@ -44,12 +44,15 @@ public class NavNotificationListener extends NotificationListenerService {
 
             Log.d("NavNotificationListener", "Received notification: " + text);
             BluetoothHelper.sendData(text);
+            NotificationUtils.showNavigationStep(this, text);
 
         }
     }
 
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
-        // Handle the removal of a notification if necessary
+        if (sbn.getPackageName().equals("com.google.android.apps.maps")) {
+            NotificationUtils.cancelNavigationNotification(this);
+        }
     }
 }

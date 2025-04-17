@@ -1,17 +1,23 @@
 package com.example.roadie;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
+import android.app.NotificationManager;
+import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,6 +43,29 @@ public class MainActivity extends AppCompatActivity {
 
         deviceListView = findViewById(R.id.deviceListView);
         Button btnConnect = findViewById(R.id.btn_connect);
+        Button btnGrantAccess = findViewById(R.id.btn_grant_access);
+        btnGrantAccess.setOnClickListener(view -> {
+            openNotificationAccessSettings();
+        });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        100);
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "nav_channel",
+                    "Navigation",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Turn-by-turn navigation directions");
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
 
         btnConnect.setOnClickListener(view -> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
@@ -154,5 +183,31 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return null;
+    }
+
+    private void openNotificationAccessSettings() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to open Notification Settings", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private boolean isNotificationAccessEnabled() {
+        String enabledListeners = Settings.Secure.getString(getContentResolver(),
+                "enabled_notification_listeners");
+        return enabledListeners != null && enabledListeners.contains(getPackageName());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (isNotificationAccessEnabled()) {
+            // Proceed to use the notification listener
+            Log.d("MainActivity", "Notification access granted!");
+        } else {
+            Log.d("MainActivity", "Notification access not granted.");
+        }
     }
 }
