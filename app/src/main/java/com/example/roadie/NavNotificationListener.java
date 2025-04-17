@@ -29,7 +29,6 @@ public class NavNotificationListener extends NotificationListenerService {
             CharSequence subTextCS = extras.getCharSequence(Notification.EXTRA_SUB_TEXT);
             Icon smallIcon = sbn.getNotification().getSmallIcon();
 
-            // Log small icon info for debugging
             if (smallIcon != null) {
                 Log.d("NavNotificationListener", "Small Icon: " + smallIcon.toString());
             }
@@ -54,22 +53,19 @@ public class NavNotificationListener extends NotificationListenerService {
 
             Log.d("NavNotificationListener", "Received notification: " + text);
 
-            // Handle icon sending
             if (smallIcon != null) {
-                // Convert Icon to byte array (for sending over Bluetooth)
                 byte[] iconBytes = iconToByteArray(smallIcon);
-                String iconBase64 = Base64.encodeToString(iconBytes, Base64.DEFAULT);
+                String iconBase64 = Base64.encodeToString(iconBytes, Base64.NO_WRAP);
 
-                // Send the icon and text over Bluetooth
                 String enhancedData = "Text: " + text + "\nIcon: " + iconBase64;
                 BluetoothHelper.sendData(enhancedData);
+                NotificationUtils.showNavigationStep(this, text, iconBase64);
+
             } else {
-                // Send only the text if there's no icon
+                NotificationUtils.showNavigationStep(this, text);
                 BluetoothHelper.sendData(text);
             }
 
-            // Display the navigation step with the text
-            NotificationUtils.showNavigationStep(this, text);
         }
     }
 
@@ -80,35 +76,31 @@ public class NavNotificationListener extends NotificationListenerService {
         }
     }
 
-    /**
-     * Convert an Icon to a byte array (for sending over Bluetooth)
-     */
     private byte[] iconToByteArray(Icon icon) {
         try {
             Drawable drawable = icon.loadDrawable(this);
-
             if (drawable == null) return new byte[0];
 
             Bitmap bitmap;
-
-            // Convert Drawable to Bitmap
             if (drawable instanceof BitmapDrawable) {
                 bitmap = ((BitmapDrawable) drawable).getBitmap();
             } else {
-                // Create a Bitmap with the intrinsic size of the Drawable
-                bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
-                        drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+                int size = 48;
+                bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
                 Canvas canvas = new Canvas(bitmap);
-                drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                drawable.setBounds(0, 0, size, size);
                 drawable.draw(canvas);
             }
 
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, 48, 48, true);
+            Bitmap rgb565Bitmap = resizedBitmap.copy(Bitmap.Config.RGB_565, false);
+
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+            rgb565Bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
             return outputStream.toByteArray();
 
         } catch (Exception e) {
-            Log.e("NavNotificationListener", "Error converting icon to byte array", e);
+            Log.e("NavNotificationListener", "Icon conversion error", e);
             return new byte[0];
         }
     }

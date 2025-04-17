@@ -4,7 +4,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
@@ -50,6 +53,54 @@ public class NotificationUtils {
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(directionText))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setOngoing(true);
+
+        NotificationManagerCompat manager = NotificationManagerCompat.from(context);
+        manager.notify(NOTIF_ID, builder.build());
+    }
+
+    public static void showNavigationStep(Context context, String directionText, String base64Icon) {
+        Log.d("Notification step", "posting not");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Navigation",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Navigation directions to be shown on watch");
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_dialog_map)
+                .setContentTitle("🧭 Navigation")
+                .setContentText(directionText)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(directionText))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
+                .extend(new NotificationCompat.WearableExtender());
+
+        if (base64Icon != null && !base64Icon.isEmpty()) {
+            try {
+                byte[] iconBytes = Base64.decode(base64Icon, Base64.NO_WRAP);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(iconBytes, 0, iconBytes.length);
+
+                if (bitmap != null) {
+                    Bitmap watchBitmap = Bitmap.createScaledBitmap(bitmap, 64, 64, true);
+                    builder.setLargeIcon(watchBitmap);
+                }
+            } catch (Exception e) {
+                Log.e("NotificationUtils", "Icon decoding failed", e);
+            }
+        }
 
         NotificationManagerCompat manager = NotificationManagerCompat.from(context);
         manager.notify(NOTIF_ID, builder.build());
