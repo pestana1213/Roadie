@@ -57,13 +57,12 @@ public class NavNotificationListener extends NotificationListenerService {
                 byte[] iconBytes = iconToByteArray(smallIcon);
                 String iconBase64 = Base64.encodeToString(iconBytes, Base64.NO_WRAP);
 
-                String enhancedData = "Text: " + text + "\nIcon: " + iconBase64;
+                String enhancedData = "TEXT:" + text + "|ICON:" + iconBase64;
                 BluetoothHelper.sendData(enhancedData);
-                NotificationUtils.showNavigationStep(this, text, iconBase64);
-
+                // NotificationUtils.showNavigationStep(this, text, iconBase64);
             } else {
-                NotificationUtils.showNavigationStep(this, text);
-                BluetoothHelper.sendData(text);
+                BluetoothHelper.sendData("TEXT:" + text + "|");
+                // NotificationUtils.showNavigationStep(this, text);
             }
 
         }

@@ -1,10 +1,17 @@
 package com.example.roadie;
 
+import static android.content.ContentValues.TAG;
+
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -138,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
         deviceListView.setOnItemClickListener((parent, view, position, id) -> {
             BluetoothDevice selectedDevice = pairDevicesList.get(position);
-            boolean connected = BluetoothHelper.connectToBluetooth(selectedDevice, this);
+            boolean connected = BluetoothHelper.connectToBluetooth(selectedDevice, this, gattCallback);
             if (connected) {
                 Toast.makeText(this, "Connected to " + selectedDevice.getName(), Toast.LENGTH_SHORT).show();
                 String dataToSend = "Welcome to Rodie!";
@@ -149,6 +156,50 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.BLUETOOTH_CONNECT}, 1);
+                return;
+            }
+
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                Log.i("MainActivity", "BLE connected to: " + gatt.getDevice().getName());
+                gatt.discoverServices();
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Log.i("MainActivity", "BLE disconnected from: " + gatt.getDevice().getName());
+            }
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.i(TAG, "BLE services discovered");
+
+                for (BluetoothGattService service : gatt.getServices()) {
+                    for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
+                        int props = characteristic.getProperties();
+                        if ((props & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0 ||
+                                (props & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) > 0) {
+
+                            BluetoothHelper.writeCharacteristic = characteristic;
+                            BluetoothHelper.bluetoothGatt = gatt;
+                            Log.i(TAG, "Writable characteristic found: " + characteristic.getUuid());
+
+                            BluetoothHelper.sendData("TEXT:Hello from phone|");
+
+                            return;
+                        }
+                    }
+                }
+
+                Log.w(TAG, "No writable characteristic found");
+            } else {
+                Log.e(TAG, "Service discovery failed, status: " + status);
+            }
+        }
+    };
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
