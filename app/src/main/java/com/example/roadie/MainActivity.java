@@ -41,9 +41,12 @@ public class MainActivity extends AppCompatActivity {
     ListView deviceListView;
     ArrayAdapter<String> adapter;
     ArrayList<BluetoothDevice> pairDevicesList = new ArrayList<>();
+    BLEAdvertiser bleAdvertiser;
+    MyGattServer gattServer;
 
     boolean autoConnect = true;
 
+    @RequiresPermission(allOf = {Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_CONNECT})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,12 +58,24 @@ public class MainActivity extends AppCompatActivity {
         btnGrantAccess.setOnClickListener(view -> {
             openNotificationAccessSettings();
         });
+
+        String[] permissions = {
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.ACCESS_FINE_LOCATION
+        };
+        if (!hasPermissions()) {
+            ActivityCompat.requestPermissions(this, permissions, 1);
+        } else {
+            startBluetooth();
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
                     != PackageManager.PERMISSION_GRANTED) {
 
                 ActivityCompat.requestPermissions(this,
-                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
                         100);
             }
         }
@@ -90,7 +105,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    @RequiresPermission(allOf = {Manifest.permission.BLUETOOTH_ADVERTISE, Manifest.permission.BLUETOOTH_CONNECT})
+    private void startBluetooth() {
+        MyGattServer gattServer = new MyGattServer(this);
+        gattServer.startServer();
+        BLEAdvertiser advertiser = new BLEAdvertiser(this);
+        advertiser.startAdvertising();
+    }
 
+    private boolean hasPermissions() {
+        String[] permissions = {
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.ACCESS_FINE_LOCATION
+        };
+        for (String perm : permissions) {
+            if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
     private void checkBluetoothConnection() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_DENIED) {
             return;
@@ -270,6 +305,15 @@ public class MainActivity extends AppCompatActivity {
             Log.d("MainActivity", "Notification access granted!");
         } else {
             Log.d("MainActivity", "Notification access not granted.");
+        }
+    }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (bleAdvertiser != null) {
+            bleAdvertiser.stopAdvertising();
         }
     }
 }
