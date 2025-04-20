@@ -27,6 +27,7 @@ import android.app.NotificationManager;
 import android.provider.Settings;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -172,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -197,6 +199,15 @@ public class MainActivity extends AppCompatActivity {
                 Log.w(TAG, "No writable characteristic found");
             } else {
                 Log.e(TAG, "Service discovery failed, status: " + status);
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt,
+                                          BluetoothGattCharacteristic characteristic,
+                                          int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.i(TAG, "Message chunk delivered");
             }
         }
     };

@@ -1,6 +1,9 @@
 package com.example.roadie;
 
+import android.Manifest;
 import android.app.Notification;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
@@ -12,12 +15,19 @@ import android.service.notification.StatusBarNotification;
 import android.util.Base64;
 import android.util.Log;
 
+import androidx.annotation.RequiresPermission;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class NavNotificationListener extends NotificationListenerService {
 
     @Override
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     public void onNotificationPosted(StatusBarNotification sbn) {
         String packageName = sbn.getPackageName();
 
@@ -59,10 +69,8 @@ public class NavNotificationListener extends NotificationListenerService {
 
                 String enhancedData = "TEXT:" + text + "|ICON:" + iconBase64;
                 BluetoothHelper.sendData(enhancedData);
-                // NotificationUtils.showNavigationStep(this, text, iconBase64);
             } else {
                 BluetoothHelper.sendData("TEXT:" + text + "|");
-                // NotificationUtils.showNavigationStep(this, text);
             }
 
         }
